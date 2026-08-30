@@ -1,4 +1,9 @@
 import './style.css'
+import {
+  addTask,
+  deleteTask,
+  setTaskCompleted,
+} from './tasks.js'
 
 document.querySelector('#app').innerHTML = `
   <main class="app">
@@ -102,7 +107,7 @@ function renderTasks() {
     }
 
    checkbox.addEventListener('change', function () {
-  task.completed = checkbox.checked
+  tasks = setTaskCompleted(tasks, task.id, checkbox.checked)
 
   saveTasks()
   renderTasks()
@@ -115,9 +120,7 @@ function renderTasks() {
     deleteButton.setAttribute('aria-label', `Delete ${task.title}`)
 
    deleteButton.addEventListener('click', function () {
-  tasks = tasks.filter(function (currentTask) {
-    return currentTask.id !== task.id
-  })
+  tasks = deleteTask(tasks, task.id)
 
   saveTasks()
   renderTasks()
@@ -143,15 +146,10 @@ taskForm.addEventListener('submit', function (event) {
     return
   }
 
-  const newTask = {
-    id: crypto.randomUUID(),
-    title: title,
-    completed: false,
-  }
+  tasks = addTask(tasks, title)
 
-  tasks.push(newTask)
-  saveTasks()
-  renderTasks()
+saveTasks()
+renderTasks()
   taskInput.value = ''
   taskInput.focus()
 })
