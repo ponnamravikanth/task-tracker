@@ -37,4 +37,54 @@ document.querySelector('#app').innerHTML = `
     </section>
   </main>
 `
-console.log('Task Tracker loaded')
+const tasks = []
+
+const taskForm = document.querySelector('#task-form')
+const taskInput = document.querySelector('#task-input')
+const taskList = document.querySelector('#task-list')
+
+function renderTasks() {
+  taskList.innerHTML = ''
+
+  if (tasks.length === 0) {
+    const emptyMessage = document.createElement('li')
+    emptyMessage.className = 'empty-message'
+    emptyMessage.textContent = 'No tasks yet.'
+
+    taskList.appendChild(emptyMessage)
+    return
+  }
+
+  for (const task of tasks) {
+    const listItem = document.createElement('li')
+    listItem.className = 'task-item'
+
+    const taskText = document.createElement('span')
+    taskText.textContent = task.title
+
+    listItem.appendChild(taskText)
+    taskList.appendChild(listItem)
+  }
+}
+
+taskForm.addEventListener('submit', function (event) {
+  event.preventDefault()
+
+  const title = taskInput.value.trim()
+
+  if (title === '') {
+    taskInput.focus()
+    return
+  }
+
+  const newTask = {
+    id: crypto.randomUUID(),
+    title: title,
+    completed: false,
+  }
+
+  tasks.push(newTask)
+  renderTasks()
+  taskInput.value = ''
+  taskInput.focus()
+})

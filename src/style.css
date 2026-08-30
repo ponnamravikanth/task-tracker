@@ -126,7 +126,18 @@ button:hover {
   background: #f7f8fa;
   border-radius: 8px;
 }
+.task-item {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 12px 14px;
+  border: 1px solid #e2e6ed;
+  border-radius: 8px;
+}
 
+.task-item + .task-item {
+  margin-top: 10px;
+}
 @media (max-width: 520px) {
   .app {
     padding: 40px 0;
