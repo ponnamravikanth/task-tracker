@@ -129,6 +129,8 @@ button:hover {
 .task-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   min-height: 52px;
   padding: 12px 14px;
   border: 1px solid #e2e6ed;
@@ -137,6 +139,43 @@ button:hover {
 
 .task-item + .task-item {
   margin-top: 10px;
+}
+
+.task-check {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.task-check input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  accent-color: #5b63d3;
+}
+
+.task-text {
+  overflow-wrap: anywhere;
+}
+
+.task-text.completed {
+  color: #8a93a1;
+  text-decoration: line-through;
+}
+
+.delete-button {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  color: #b42318;
+  font-size: 0.85rem;
+  background: #fff1f0;
+}
+
+.delete-button:hover {
+  background: #ffe0dd;
 }
 @media (max-width: 520px) {
   .app {

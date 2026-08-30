@@ -37,7 +37,7 @@ document.querySelector('#app').innerHTML = `
     </section>
   </main>
 `
-const tasks = []
+let tasks = []
 
 const taskForm = document.querySelector('#task-form')
 const taskInput = document.querySelector('#task-input')
@@ -59,10 +59,46 @@ function renderTasks() {
     const listItem = document.createElement('li')
     listItem.className = 'task-item'
 
+    const taskLabel = document.createElement('label')
+    taskLabel.className = 'task-check'
+
+    const checkbox = document.createElement('input')
+    checkbox.type = 'checkbox'
+    checkbox.checked = task.completed
+
     const taskText = document.createElement('span')
+    taskText.className = 'task-text'
     taskText.textContent = task.title
 
-    listItem.appendChild(taskText)
+    if (task.completed) {
+      taskText.classList.add('completed')
+    }
+
+    checkbox.addEventListener('change', function () {
+      task.completed = checkbox.checked
+      renderTasks()
+    })
+
+    const deleteButton = document.createElement('button')
+    deleteButton.type = 'button'
+    deleteButton.className = 'delete-button'
+    deleteButton.textContent = 'Delete'
+    deleteButton.setAttribute('aria-label', `Delete ${task.title}`)
+
+    deleteButton.addEventListener('click', function () {
+      tasks = tasks.filter(function (currentTask) {
+        return currentTask.id !== task.id
+      })
+
+      renderTasks()
+    })
+
+    taskLabel.appendChild(checkbox)
+    taskLabel.appendChild(taskText)
+
+    listItem.appendChild(taskLabel)
+    listItem.appendChild(deleteButton)
+
     taskList.appendChild(listItem)
   }
 }
