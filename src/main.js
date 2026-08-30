@@ -37,11 +37,38 @@ document.querySelector('#app').innerHTML = `
     </section>
   </main>
 `
-let tasks = []
+const STORAGE_KEY = 'task-tracker.tasks'
+
+let tasks = loadTasks()
 
 const taskForm = document.querySelector('#task-form')
 const taskInput = document.querySelector('#task-input')
 const taskList = document.querySelector('#task-list')
+function loadTasks() {
+  const savedTasks = localStorage.getItem(STORAGE_KEY)
+
+  if (savedTasks === null) {
+    return []
+  }
+
+  try {
+    const parsedTasks = JSON.parse(savedTasks)
+
+    if (!Array.isArray(parsedTasks)) {
+      return []
+    }
+
+    return parsedTasks
+  } catch (error) {
+    console.error('Could not load saved tasks:', error)
+    return []
+  }
+}
+
+function saveTasks() {
+  const taskData = JSON.stringify(tasks)
+  localStorage.setItem(STORAGE_KEY, taskData)
+}
 
 function renderTasks() {
   taskList.innerHTML = ''
@@ -74,10 +101,12 @@ function renderTasks() {
       taskText.classList.add('completed')
     }
 
-    checkbox.addEventListener('change', function () {
-      task.completed = checkbox.checked
-      renderTasks()
-    })
+   checkbox.addEventListener('change', function () {
+  task.completed = checkbox.checked
+
+  saveTasks()
+  renderTasks()
+})
 
     const deleteButton = document.createElement('button')
     deleteButton.type = 'button'
@@ -85,13 +114,14 @@ function renderTasks() {
     deleteButton.textContent = 'Delete'
     deleteButton.setAttribute('aria-label', `Delete ${task.title}`)
 
-    deleteButton.addEventListener('click', function () {
-      tasks = tasks.filter(function (currentTask) {
-        return currentTask.id !== task.id
-      })
+   deleteButton.addEventListener('click', function () {
+  tasks = tasks.filter(function (currentTask) {
+    return currentTask.id !== task.id
+  })
 
-      renderTasks()
-    })
+  saveTasks()
+  renderTasks()
+})
 
     taskLabel.appendChild(checkbox)
     taskLabel.appendChild(taskText)
@@ -120,7 +150,9 @@ taskForm.addEventListener('submit', function (event) {
   }
 
   tasks.push(newTask)
+  saveTasks()
   renderTasks()
   taskInput.value = ''
   taskInput.focus()
 })
+renderTasks()
