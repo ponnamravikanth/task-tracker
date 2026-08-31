@@ -32,3 +32,8 @@ export function deleteTask(tasks, taskId) {
     return task.id !== taskId
   })
 }
+export function countRemainingTasks(tasks) {
+  return tasks.filter(function (task) {
+    return task.completed === false
+  }).length
+}

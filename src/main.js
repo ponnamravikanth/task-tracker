@@ -1,6 +1,7 @@
 import './style.css'
 import {
   addTask,
+  countRemainingTasks,
   deleteTask,
   setTaskCompleted,
 } from './tasks.js'
@@ -33,9 +34,12 @@ document.querySelector('#app').innerHTML = `
       </form>
 
       <section class="task-list-section">
-        <h2>Tasks</h2>
+  <div class="task-list-heading">
+    <h2>Tasks</h2>
+    <span id="task-count" class="task-count">0 remaining</span>
+  </div>
 
-        <ul id="task-list" class="task-list">
+  <ul id="task-list" class="task-list">
           <li class="empty-message">No tasks yet.</li>
         </ul>
       </section>
@@ -49,6 +53,7 @@ let tasks = loadTasks()
 const taskForm = document.querySelector('#task-form')
 const taskInput = document.querySelector('#task-input')
 const taskList = document.querySelector('#task-list')
+const taskCount = document.querySelector('#task-count')
 function loadTasks() {
   const savedTasks = localStorage.getItem(STORAGE_KEY)
 
@@ -77,7 +82,10 @@ function saveTasks() {
 
 function renderTasks() {
   taskList.innerHTML = ''
+  const remainingCount = countRemainingTasks(tasks)
+  const taskWord = remainingCount === 1 ? 'task' : 'tasks'
 
+  taskCount.textContent = `${remainingCount} ${taskWord} remaining`
   if (tasks.length === 0) {
     const emptyMessage = document.createElement('li')
     emptyMessage.className = 'empty-message'

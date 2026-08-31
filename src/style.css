@@ -109,7 +109,6 @@ button:hover {
 }
 
 .task-list-section h2 {
-  margin: 0 0 12px;
   font-size: 1.1rem;
 }
 
@@ -176,6 +175,23 @@ button:hover {
 
 .delete-button:hover {
   background: #ffe0dd;
+}
+.task-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.task-list-heading h2 {
+  margin: 0;
+}
+
+.task-count {
+  color: #637083;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 @media (max-width: 520px) {
   .app {
