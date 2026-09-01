@@ -12,7 +12,7 @@ document.querySelector('#app').innerHTML = `
       <p class="eyebrow">My first application</p>
       <h1>Task Tracker</h1>
       <p class="subtitle">
-        Keep track of what needs to be done.
+        Plan your day, one task at a time.
       </p>
     </header>
 
