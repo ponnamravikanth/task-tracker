@@ -4,14 +4,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "preview": "vite preview",
-  "test": "vitest run",
-  "test:watch": "vitest"
-},
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "server": "node --watch server/server.js",
+    "check:server": "node --check server/server.js"
+  },
   "devDependencies": {
     "vite": "^8.2.2",
     "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
   }
 }
