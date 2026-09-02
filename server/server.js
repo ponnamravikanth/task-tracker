@@ -1,10 +1,15 @@
 import express from 'express'
+import {
+  createTask,
+  deleteTask,
+  findTask,
+  listTasks,
+  updateTaskCompletion,
+} from './database.js'
 
 const app = express()
 const port = 3000
 const host = '127.0.0.1'
-
-let tasks = []
 
 app.use(express.json({ limit: '10kb' }))
 
@@ -15,7 +20,21 @@ app.get('/api/health', function (request, response) {
 })
 
 app.get('/api/tasks', function (request, response) {
+  const tasks = listTasks()
+
   response.json(tasks)
+})
+
+app.get('/api/tasks/:taskId', function (request, response) {
+  const task = findTask(request.params.taskId)
+
+  if (task === null) {
+    return response.status(404).json({
+      error: 'Task not found.',
+    })
+  }
+
+  return response.json(task)
 })
 
 app.post('/api/tasks', function (request, response) {
@@ -27,28 +46,12 @@ app.post('/api/tasks', function (request, response) {
     })
   }
 
-  const newTask = {
-    id: crypto.randomUUID(),
-    title: title.trim(),
-    completed: false,
-  }
-
-  tasks.push(newTask)
+  const newTask = createTask(title.trim())
 
   return response.status(201).json(newTask)
 })
 
 app.patch('/api/tasks/:taskId', function (request, response) {
-  const task = tasks.find(function (currentTask) {
-    return currentTask.id === request.params.taskId
-  })
-
-  if (task === undefined) {
-    return response.status(404).json({
-      error: 'Task not found.',
-    })
-  }
-
   const completed = request.body.completed
 
   if (typeof completed !== 'boolean') {
@@ -57,23 +60,28 @@ app.patch('/api/tasks/:taskId', function (request, response) {
     })
   }
 
-  task.completed = completed
+  const updatedTask = updateTaskCompletion(
+    request.params.taskId,
+    completed,
+  )
 
-  return response.json(task)
-})
-
-app.delete('/api/tasks/:taskId', function (request, response) {
-  const taskIndex = tasks.findIndex(function (task) {
-    return task.id === request.params.taskId
-  })
-
-  if (taskIndex === -1) {
+  if (updatedTask === null) {
     return response.status(404).json({
       error: 'Task not found.',
     })
   }
 
-  tasks.splice(taskIndex, 1)
+  return response.json(updatedTask)
+})
+
+app.delete('/api/tasks/:taskId', function (request, response) {
+  const wasDeleted = deleteTask(request.params.taskId)
+
+  if (!wasDeleted) {
+    return response.status(404).json({
+      error: 'Task not found.',
+    })
+  }
 
   return response.status(204).send()
 })
