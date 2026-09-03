@@ -10,7 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "server": "node --watch server/server.js",
-    "check:server": "node --check server/server.js && node --check server/database.js"
+    "check:server": "node --check server/server.js && node --check server/app.js && node --check server/database.js"
   },
   "devDependencies": {
     "vite": "^8.2.2",
