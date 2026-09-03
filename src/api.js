@@ -1,4 +1,13 @@
-const tasksUrl = `${import.meta.env.BASE_URL}api/tasks`
+const configuredApiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL ||
+  `${import.meta.env.BASE_URL}api`
+
+const apiBaseUrl = configuredApiBaseUrl.replace(
+  /\/+$/,
+  '',
+)
+
+const tasksUrl = `${apiBaseUrl}/tasks`
 
 async function readErrorMessage(response) {
   try {
