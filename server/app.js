@@ -1,9 +1,18 @@
+import cors from 'cors'
 import express from 'express'
 
-export function createApp(taskRepository) {
+export function createApp(
+  taskRepository,
+  { allowedOrigin = 'http://localhost:5173' } = {},
+) {
   const app = express()
+    app.use(
+    cors({
+    origin: allowedOrigin,
+    }),
+    )
 
-  app.use(express.json({ limit: '10kb' }))
+app.use(express.json())
 
   app.get('/api/health', function (request, response) {
     response.json({
