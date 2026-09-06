@@ -20,16 +20,17 @@ app.use(express.json())
     })
   })
 
-  app.get('/api/tasks', function (request, response) {
-    const tasks = taskRepository.listTasks()
-
+ app.get(
+  '/api/tasks',
+  async function (request, response) {
+    const tasks = await taskRepository.listTasks()
     response.json(tasks)
-  })
+  },)
 
   app.get(
     '/api/tasks/:taskId',
-    function (request, response) {
-      const task = taskRepository.findTask(
+    async function (request, response) {
+      const task = await taskRepository.findTask(
         request.params.taskId,
       )
 
@@ -43,7 +44,7 @@ app.use(express.json())
     },
   )
 
-  app.post('/api/tasks', function (request, response) {
+  app.post('/api/tasks', async function (request, response) {
     const title = request.body.title
 
     if (
@@ -55,16 +56,17 @@ app.use(express.json())
       })
     }
 
-    const newTask = taskRepository.createTask(
+    const newTask = await taskRepository.createTask(
       title.trim(),
     )
 
   return response.status(201).json(newTask)
-  })
+  },
+)
 
   app.patch(
     '/api/tasks/:taskId',
-    function (request, response) {
+    async function (request, response) {
       const completed = request.body.completed
 
       if (typeof completed !== 'boolean') {
@@ -74,7 +76,7 @@ app.use(express.json())
       }
 
       const updatedTask =
-        taskRepository.updateTaskCompletion(
+        await taskRepository.updateTaskCompletion(
           request.params.taskId,
           completed,
         )
@@ -91,8 +93,8 @@ app.use(express.json())
 
   app.delete(
     '/api/tasks/:taskId',
-    function (request, response) {
-      const wasDeleted = taskRepository.deleteTask(
+    async function (request, response) {
+      const wasDeleted = await taskRepository.deleteTask(
         request.params.taskId,
       )
 

@@ -45,7 +45,7 @@ afterEach(async function () {
     })
   })
 
-  repository.close()
+  await repository.close()
 })
 
 async function createTask(title) {

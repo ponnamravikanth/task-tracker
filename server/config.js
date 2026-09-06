@@ -1,7 +1,3 @@
-import {
-  defaultDatabasePath,
-} from './database.js'
-
 function parsePort(value) {
   const port = Number.parseInt(value ?? '3000', 10)
 
@@ -19,18 +15,20 @@ function parsePort(value) {
 }
 
 export function loadServerConfig() {
-  const port = Number(process.env.PORT || 3000)
+  const databaseUrl = process.env.DATABASE_URL
 
-  if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error('PORT must be an integer between 1 and 65535')
+  if (!databaseUrl) {
+    throw new Error(
+      'DATABASE_URL environment variable is required.',
+    )
   }
 
   return {
     host: process.env.HOST || '127.0.0.1',
-    port,
-    databasePath:
-      process.env.DATABASE_PATH || './data/task-tracker.db',
+    port: parsePort(process.env.PORT),
+    databaseUrl,
     allowedOrigin:
-      process.env.CORS_ORIGIN || 'http://localhost:5173',
+      process.env.CORS_ORIGIN ||
+      'http://localhost:5173',
   }
 }

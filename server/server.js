@@ -1,30 +1,42 @@
 import { createApp } from './app.js'
+import { loadServerConfig } from './config.js'
 
 import {
-  createTaskRepository,
-} from './database.js'
-
-import {
-  loadServerConfig,
-} from './config.js'
+  createPostgresTaskRepository,
+} from './postgres-database.js'
 
 const config = loadServerConfig()
 
-const taskRepository = createTaskRepository(
-  config.databasePath,
-)
+const taskRepository =
+  createPostgresTaskRepository(config.databaseUrl)
+
+await taskRepository.initialize()
 
 const app = createApp(taskRepository, {
   allowedOrigin: config.allowedOrigin,
 })
 
-app.listen(config.port, config.host, function () {
-  console.log(
-    `Task API running at ` +
-    `http://${config.host}:${config.port}`,
-  )
+const server = app.listen(
+  config.port,
+  config.host,
+  function () {
+    console.log(
+      `Task API running at ` +
+        `http://${config.host}:${config.port}`,
+    )
 
-  console.log(
-    `Using database: ${config.databasePath}`,
-  )
-})
+    console.log('Using PostgreSQL database')
+  },
+)
+
+async function shutDown() {
+  console.log('Shutting down server...')
+
+  server.close(async function () {
+    await taskRepository.close()
+    process.exit(0)
+  })
+}
+
+process.on('SIGINT', shutDown)
+process.on('SIGTERM', shutDown)
