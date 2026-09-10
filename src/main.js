@@ -1,4 +1,9 @@
 import './style.css'
+import {
+  initializeAuthentication,
+  logIn,
+  logOut,
+} from './auth.js'
 
 import {
   createTask,
@@ -19,9 +24,36 @@ document.querySelector('#app').innerHTML = `
       <p class="subtitle">
         Plan your day, one task at a time.
       </p>
+            <div class="auth-controls">
+        <p
+          id="auth-status"
+          class="auth-status"
+          role="status"
+          aria-live="polite"
+        >
+          Checking sign-in...
+        </p>
+
+        <button
+          id="login-button"
+          type="button"
+          hidden
+        >
+          Log in
+        </button>
+
+        <button
+          id="logout-button"
+          type="button"
+          class="secondary-button"
+          hidden
+        >
+          Log out
+        </button>
+      </div>
     </header>
 
-    <section class="task-panel">
+    <section id="task-panel" class="task-panel" hidden>
       <form id="task-form" class="task-form">
         <label for="task-input">New task</label>
 
@@ -67,6 +99,10 @@ const taskList = document.querySelector('#task-list')
 const taskCount = document.querySelector('#task-count')
 const appStatus = document.querySelector('#app-status')
 const addButton = taskForm.querySelector('button[type="submit"]')
+const taskPanel = document.querySelector('#task-panel')
+const authStatus = document.querySelector('#auth-status')
+const loginButton = document.querySelector('#login-button')
+const logoutButton = document.querySelector('#logout-button')
 
 function setStatus(message, type = '') {
   appStatus.textContent = message
@@ -221,5 +257,57 @@ taskForm.addEventListener('submit', async function (event) {
     addButton.disabled = false
   }
 })
+loginButton.addEventListener('click', async function () {
+  loginButton.disabled = true
+  authStatus.textContent = 'Opening login...'
 
-loadTasks()
+  try {
+    await logIn()
+  } catch (error) {
+    loginButton.disabled = false
+    authStatus.textContent = error.message
+  }
+})
+
+logoutButton.addEventListener('click', function () {
+  logOut()
+})
+async function initializeApplication() {
+  taskPanel.hidden = true
+  loginButton.hidden = true
+  logoutButton.hidden = true
+  authStatus.textContent = 'Checking sign-in...'
+
+  try {
+    const authentication =
+      await initializeAuthentication()
+
+    if (!authentication.authenticated) {
+      authStatus.textContent =
+        'Log in to view your tasks.'
+
+      loginButton.hidden = false
+      return
+    }
+
+    const displayName =
+      authentication.user?.name ||
+      authentication.user?.email ||
+      'Signed-in user'
+
+    authStatus.textContent =
+      `Signed in as ${displayName}`
+
+    logoutButton.hidden = false
+    taskPanel.hidden = false
+
+    await loadTasks()
+  } catch (error) {
+    authStatus.textContent =
+      `Authentication error: ${error.message}`
+
+    loginButton.hidden = false
+  }
+}
+
+initializeApplication()

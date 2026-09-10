@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "engines": {
-  "node": ">=24 <25"
+    "node": ">=24 <25"
   },
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run --exclude server/postgres-database.test.js",
-   "test:watch": "vitest --exclude server/postgres-database.test.js",
+    "test:watch": "vitest --exclude server/postgres-database.test.js",
     "test:postgres": "node --env-file-if-exists=.env.test.local node_modules/vitest/vitest.mjs run server/postgres-database.test.js",
     "server": "node --env-file-if-exists=.env.local --watch server/server.js",
     "start": "node --env-file-if-exists=.env.local server/server.js",
@@ -22,6 +22,7 @@
     "vitest": "^4.1.11"
   },
   "dependencies": {
+    "@auth0/auth0-spa-js": "^2.24.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "pg": "^8.23.0"
