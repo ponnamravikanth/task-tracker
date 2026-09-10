@@ -41,8 +41,21 @@ jobs:
       - name: Run automated tests
         run: npm test
 
+            - name: Validate production API configuration
+        run: |
+          if [ -z "$VITE_API_BASE_URL" ]; then
+            echo "PRODUCTION_API_BASE_URL is not configured."
+            exit 1
+          fi
+
+        env:
+          VITE_API_BASE_URL: ${{ vars.PRODUCTION_API_BASE_URL }}
+
       - name: Build production application
         run: npm run build
+
+        env:
+          VITE_API_BASE_URL: ${{ vars.PRODUCTION_API_BASE_URL }}
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
