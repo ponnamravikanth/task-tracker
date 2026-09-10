@@ -22,13 +22,28 @@ export function loadServerConfig() {
       'DATABASE_URL environment variable is required.',
     )
   }
+const auth0Domain = process.env.AUTH0_DOMAIN
+const auth0Audience = process.env.AUTH0_AUDIENCE
+if (!auth0Domain) {
+  throw new Error(
+    'AUTH0_DOMAIN environment variable is required.',
+  )
+}
 
+if (!auth0Audience) {
+  throw new Error(
+    'AUTH0_AUDIENCE environment variable is required.',
+  )
+}
   return {
-    host: process.env.HOST || '127.0.0.1',
-    port: parsePort(process.env.PORT),
-    databaseUrl,
-    allowedOrigin:
-      process.env.CORS_ORIGIN ||
-      'http://localhost:5173',
-  }
+  host: process.env.HOST || '127.0.0.1',
+  port: parsePort(process.env.PORT),
+  databaseUrl,
+  auth0Domain,
+  auth0Audience,
+  allowedOrigin:
+    process.env.CORS_ORIGIN ||
+    'http://localhost:5173',
+}
+
 }

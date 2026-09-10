@@ -15,11 +15,26 @@ import {
 let repository
 let server
 let baseUrl
+function authenticateTestUser(
+  request,
+  response,
+  next,
+) {
+  request.auth = {
+    payload: {
+      sub: 'auth0|test-user',
+    },
+  }
+
+  next()
+}
 
 beforeEach(async function () {
   repository = createTaskRepository(':memory:')
 
-  const app = createApp(repository)
+  const app = createApp(repository, {
+  authenticate: authenticateTestUser,
+})
 
   server = app.listen(0, '127.0.0.1')
 

@@ -1,9 +1,20 @@
 import cors from 'cors'
 import express from 'express'
 
+function rejectUnauthenticatedRequest(
+  request,
+  response,
+) {
+  response.status(401).json({
+    error: 'Authentication required.',
+  })
+}
 export function createApp(
   taskRepository,
-  { allowedOrigin = 'http://localhost:5173' } = {},
+  {
+    allowedOrigin = 'http://localhost:5173',
+    authenticate = rejectUnauthenticatedRequest,
+  } = {},
 ) {
   const app = express()
     app.use(
@@ -19,6 +30,17 @@ app.use(express.json())
       status: 'ok',
     })
   })
+  app.get(
+  '/api/me',
+  authenticate,
+  function (request, response) {
+    response.json({
+      userId: request.auth.payload.sub,
+    })
+  },
+)
+
+app.use('/api/tasks', authenticate)
 
  app.get(
   '/api/tasks',
@@ -120,8 +142,12 @@ app.use(express.json())
     response,
     next,
   ) {
-    console.error(error)
-
+  console.error(error)
+  if (error.status === 401) {
+  return response.status(401).json({
+    error: 'Authentication required.',
+  })
+}
     if (error instanceof SyntaxError) {
       return response.status(400).json({
         error: 'Request body contains invalid JSON.',

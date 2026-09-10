@@ -1,3 +1,7 @@
+import {
+  getAccessToken,
+} from './auth.js'
+
 const configuredApiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ||
   `${import.meta.env.BASE_URL}api`
@@ -24,7 +28,18 @@ async function readErrorMessage(response) {
 }
 
 async function request(url, options = {}) {
-  const response = await fetch(url, options)
+const accessToken = await getAccessToken()
+const headers = new Headers(options.headers)
+
+headers.set(
+  'Authorization',
+  `Bearer ${accessToken}`,
+)
+
+const response = await fetch(url, {
+  ...options,
+  headers,
+})
 
   if (!response.ok) {
     const message = await readErrorMessage(response)

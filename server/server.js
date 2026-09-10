@@ -4,8 +4,16 @@ import { loadServerConfig } from './config.js'
 import {
   createPostgresTaskRepository,
 } from './postgres-database.js'
+import {
+  createAuthenticationMiddleware,
+} from './auth.js'
 
 const config = loadServerConfig()
+const authenticate =
+  createAuthenticationMiddleware({
+    domain: config.auth0Domain,
+    audience: config.auth0Audience,
+  })
 
 const taskRepository =
   createPostgresTaskRepository(config.databaseUrl)
@@ -14,6 +22,7 @@ await taskRepository.initialize()
 
 const app = createApp(taskRepository, {
   allowedOrigin: config.allowedOrigin,
+  authenticate,
 })
 
 const server = app.listen(
