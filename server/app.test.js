@@ -15,6 +15,7 @@ import {
 let repository
 let server
 let baseUrl
+let authenticatedUserId
 function authenticateTestUser(
   request,
   response,
@@ -22,7 +23,7 @@ function authenticateTestUser(
 ) {
   request.auth = {
     payload: {
-      sub: 'auth0|test-user',
+      sub: authenticatedUserId,
     },
   }
 
@@ -30,6 +31,7 @@ function authenticateTestUser(
 }
 
 beforeEach(async function () {
+  authenticatedUserId = 'google-oauth2|user-a'
   repository = createTaskRepository(':memory:')
 
   const app = createApp(repository, {
@@ -195,4 +197,44 @@ describe('task API', function () {
       error: 'Task not found.',
     })
   })
+  it('keeps tasks isolated by user', async function () {
+  const createResponse = await createTask(
+    'User A private task',
+  )
+
+  const userATask = await createResponse.json()
+
+  authenticatedUserId = 'google-oauth2|user-b'
+
+  const userBListResponse = await fetch(
+    `${baseUrl}/api/tasks`,
+  )
+
+  expect(await userBListResponse.json()).toEqual([])
+
+  const userBReadResponse = await fetch(
+    `${baseUrl}/api/tasks/${userATask.id}`,
+  )
+
+  expect(userBReadResponse.status).toBe(404)
+
+  const userBDeleteResponse = await fetch(
+    `${baseUrl}/api/tasks/${userATask.id}`,
+    {
+      method: 'DELETE',
+    },
+  )
+
+  expect(userBDeleteResponse.status).toBe(404)
+
+  authenticatedUserId = 'google-oauth2|user-a'
+
+  const userAListResponse = await fetch(
+    `${baseUrl}/api/tasks`,
+  )
+
+  expect(await userAListResponse.json()).toEqual([
+    userATask,
+  ])
+})
 })

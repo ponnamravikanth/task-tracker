@@ -42,6 +42,7 @@ export function createTaskRepository(
 
     CREATE TABLE IF NOT EXISTS tasks (
       id TEXT PRIMARY KEY,
+      user_id TEXT,
       title TEXT NOT NULL
         CHECK (length(trim(title)) > 0),
       completed INTEGER NOT NULL DEFAULT 0
@@ -49,69 +50,106 @@ export function createTaskRepository(
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     ) STRICT;
   `)
+  const taskColumns = database
+  .prepare('PRAGMA table_info(tasks)')
+  .all()
 
-  function listTasks() {
-    const statement = database.prepare(`
-      SELECT id, title, completed, created_at
-      FROM tasks
-      ORDER BY created_at ASC, rowid ASC
-    `)
+const hasUserIdColumn = taskColumns.some(
+  function (column) {
+    return column.name === 'user_id'
+  },
+)
 
-    return statement.all().map(convertTaskRow)
-  }
+if (!hasUserIdColumn) {
+  database.exec(`
+    ALTER TABLE tasks
+    ADD COLUMN user_id TEXT;
+  `)
+}
 
-  function findTask(taskId) {
-    const statement = database.prepare(`
-      SELECT id, title, completed, created_at
-      FROM tasks
-      WHERE id = ?
-    `)
+database.exec(`
+  CREATE INDEX IF NOT EXISTS tasks_user_id_idx
+  ON tasks (user_id);
+`)
 
-    return convertTaskRow(statement.get(taskId))
-  }
+  function listTasks(userId) {
+  const statement = database.prepare(`
+    SELECT id, title, completed, created_at
+    FROM tasks
+    WHERE user_id = ?
+    ORDER BY created_at ASC, rowid ASC
+  `)
 
-  function createTask(title) {
-    const taskId = crypto.randomUUID()
+  return statement.all(userId).map(convertTaskRow)
+}
 
-    const statement = database.prepare(`
-      INSERT INTO tasks (id, title, completed)
-      VALUES (?, ?, 0)
-    `)
+  function findTask(userId, taskId) {
+  const statement = database.prepare(`
+    SELECT id, title, completed, created_at
+    FROM tasks
+    WHERE id = ?
+      AND user_id = ?
+  `)
 
-    statement.run(taskId, title)
+  return convertTaskRow(
+    statement.get(taskId, userId),
+  )
+}
 
-    return findTask(taskId)
-  }
+  function createTask(userId, title) {
+  const taskId = crypto.randomUUID()
 
-  function updateTaskCompletion(taskId, completed) {
-    const statement = database.prepare(`
-      UPDATE tasks
-      SET completed = ?
-      WHERE id = ?
-    `)
-
-    const result = statement.run(
-      completed ? 1 : 0,
-      taskId,
+  const statement = database.prepare(`
+    INSERT INTO tasks (
+      id,
+      user_id,
+      title,
+      completed
     )
+    VALUES (?, ?, ?, 0)
+  `)
 
-    if (Number(result.changes) === 0) {
-      return null
-    }
+  statement.run(taskId, userId, title)
 
-    return findTask(taskId)
+  return findTask(userId, taskId)
+}
+
+  function updateTaskCompletion(
+  userId,
+  taskId,
+  completed,
+) {
+  const statement = database.prepare(`
+    UPDATE tasks
+    SET completed = ?
+    WHERE id = ?
+      AND user_id = ?
+  `)
+
+  const result = statement.run(
+    completed ? 1 : 0,
+    taskId,
+    userId,
+  )
+
+  if (Number(result.changes) === 0) {
+    return null
   }
 
-  function deleteTask(taskId) {
-    const statement = database.prepare(`
-      DELETE FROM tasks
-      WHERE id = ?
-    `)
+  return findTask(userId, taskId)
+}
 
-    const result = statement.run(taskId)
+ function deleteTask(userId, taskId) {
+  const statement = database.prepare(`
+    DELETE FROM tasks
+    WHERE id = ?
+      AND user_id = ?
+  `)
 
-    return Number(result.changes) > 0
-  }
+  const result = statement.run(taskId, userId)
+
+  return Number(result.changes) > 0
+}
 
   function close() {
     database.close()

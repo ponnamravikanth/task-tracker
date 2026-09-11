@@ -9,6 +9,11 @@ function rejectUnauthenticatedRequest(
     error: 'Authentication required.',
   })
 }
+
+function getUserId(request) {
+  return request.auth.payload.sub
+}
+
 export function createApp(
   taskRepository,
   {
@@ -17,42 +22,49 @@ export function createApp(
   } = {},
 ) {
   const app = express()
-    app.use(
-    cors({
-    origin: allowedOrigin,
-    }),
-    )
 
-app.use(express.json())
+  app.use(
+    cors({
+      origin: allowedOrigin,
+    }),
+  )
+
+  app.use(express.json())
 
   app.get('/api/health', function (request, response) {
     response.json({
       status: 'ok',
     })
   })
+
   app.get(
-  '/api/me',
-  authenticate,
-  function (request, response) {
-    response.json({
-      userId: request.auth.payload.sub,
-    })
-  },
-)
+    '/api/me',
+    authenticate,
+    function (request, response) {
+      response.json({
+        userId: getUserId(request),
+      })
+    },
+  )
 
-app.use('/api/tasks', authenticate)
+  app.use('/api/tasks', authenticate)
 
- app.get(
-  '/api/tasks',
-  async function (request, response) {
-    const tasks = await taskRepository.listTasks()
-    response.json(tasks)
-  },)
+  app.get(
+    '/api/tasks',
+    async function (request, response) {
+      const tasks = await taskRepository.listTasks(
+        getUserId(request),
+      )
+
+      response.json(tasks)
+    },
+  )
 
   app.get(
     '/api/tasks/:taskId',
     async function (request, response) {
       const task = await taskRepository.findTask(
+        getUserId(request),
         request.params.taskId,
       )
 
@@ -66,25 +78,28 @@ app.use('/api/tasks', authenticate)
     },
   )
 
-  app.post('/api/tasks', async function (request, response) {
-    const title = request.body.title
+  app.post(
+    '/api/tasks',
+    async function (request, response) {
+      const title = request.body.title
 
-    if (
-      typeof title !== 'string' ||
-      title.trim() === ''
-    ) {
-      return response.status(400).json({
-        error: 'Task title is required.',
-      })
-    }
+      if (
+        typeof title !== 'string' ||
+        title.trim() === ''
+      ) {
+        return response.status(400).json({
+          error: 'Task title is required.',
+        })
+      }
 
-    const newTask = await taskRepository.createTask(
-      title.trim(),
-    )
+      const newTask = await taskRepository.createTask(
+        getUserId(request),
+        title.trim(),
+      )
 
-  return response.status(201).json(newTask)
-  },
-)
+      return response.status(201).json(newTask)
+    },
+  )
 
   app.patch(
     '/api/tasks/:taskId',
@@ -99,6 +114,7 @@ app.use('/api/tasks', authenticate)
 
       const updatedTask =
         await taskRepository.updateTaskCompletion(
+          getUserId(request),
           request.params.taskId,
           completed,
         )
@@ -116,9 +132,11 @@ app.use('/api/tasks', authenticate)
   app.delete(
     '/api/tasks/:taskId',
     async function (request, response) {
-      const wasDeleted = await taskRepository.deleteTask(
-        request.params.taskId,
-      )
+      const wasDeleted =
+        await taskRepository.deleteTask(
+          getUserId(request),
+          request.params.taskId,
+        )
 
       if (!wasDeleted) {
         return response.status(404).json({
@@ -142,12 +160,14 @@ app.use('/api/tasks', authenticate)
     response,
     next,
   ) {
-  console.error(error)
-  if (error.status === 401) {
-  return response.status(401).json({
-    error: 'Authentication required.',
-  })
-}
+    console.error(error)
+
+    if (error.status === 401) {
+      return response.status(401).json({
+        error: 'Authentication required.',
+      })
+    }
+
     if (error instanceof SyntaxError) {
       return response.status(400).json({
         error: 'Request body contains invalid JSON.',

@@ -40,6 +40,8 @@ const repository =
 const cleanupPool = new Pool({
   connectionString: databaseUrl,
 })
+const userA = 'google-oauth2|user-a'
+const userB = 'google-oauth2|user-b'
 
 beforeAll(async function () {
   await repository.initialize()
@@ -64,6 +66,7 @@ describe('PostgreSQL task repository', function () {
   it('creates, finds, and lists a task', async function () {
     const createdTask =
       await repository.createTask(
+        userA,
         'Test PostgreSQL repository',
       )
 
@@ -81,26 +84,31 @@ describe('PostgreSQL task repository', function () {
     )
 
     const foundTask =
-      await repository.findTask(createdTask.id)
+    await repository.findTask(
+    userA,
+    createdTask.id,
+  )
 
     expect(foundTask).toEqual(createdTask)
 
-    const tasks = await repository.listTasks()
+const tasks = await repository.listTasks(userA)
 
     expect(tasks).toEqual([createdTask])
   })
 
   it('updates task completion', async function () {
     const createdTask =
-      await repository.createTask(
-        'Complete integration test',
-      )
+    await repository.createTask(
+    userA,
+    'Test PostgreSQL repository',
+  )
 
     const updatedTask =
-      await repository.updateTaskCompletion(
-        createdTask.id,
-        true,
-      )
+    await repository.updateTaskCompletion(
+    userA,
+    createdTask.id,
+    true,
+  )
 
     expect(updatedTask).toEqual({
       ...createdTask,
@@ -111,6 +119,7 @@ describe('PostgreSQL task repository', function () {
   it('returns null for a missing task', async function () {
     const missingTask =
       await repository.findTask(
+        userA,
         '00000000-0000-0000-0000-000000000000',
       )
 
@@ -120,16 +129,20 @@ describe('PostgreSQL task repository', function () {
   it('deletes a task', async function () {
     const createdTask =
       await repository.createTask(
+        userA,
         'Delete integration test task',
       )
 
     const wasDeleted =
-      await repository.deleteTask(createdTask.id)
+  await repository.deleteTask(
+    userA,
+    createdTask.id,
+  )
 
     expect(wasDeleted).toBe(true)
 
     const deletedTask =
-      await repository.findTask(createdTask.id)
+      await repository.findTask(userA, createdTask.id)
 
     expect(deletedTask).toBeNull()
   })
@@ -137,9 +150,55 @@ describe('PostgreSQL task repository', function () {
   it('reports false when deleting a missing task', async function () {
     const wasDeleted =
       await repository.deleteTask(
+        userA, 
         '00000000-0000-0000-0000-000000000000',
       )
 
     expect(wasDeleted).toBe(false)
   })
+  it('keeps tasks isolated by user', async function () {
+  const userATask =
+    await repository.createTask(
+      userA,
+      'User A database task',
+    )
+
+  const userBTasks =
+    await repository.listTasks(userB)
+
+  expect(userBTasks).toEqual([])
+
+  const taskReadByUserB =
+    await repository.findTask(
+      userB,
+      userATask.id,
+    )
+
+  expect(taskReadByUserB).toBeNull()
+
+  const taskUpdatedByUserB =
+    await repository.updateTaskCompletion(
+      userB,
+      userATask.id,
+      true,
+    )
+
+  expect(taskUpdatedByUserB).toBeNull()
+
+  const taskDeletedByUserB =
+    await repository.deleteTask(
+      userB,
+      userATask.id,
+    )
+
+  expect(taskDeletedByUserB).toBe(false)
+
+  const userAStillHasTask =
+    await repository.findTask(
+      userA,
+      userATask.id,
+    )
+
+  expect(userAStillHasTask).toEqual(userATask)
+})
 })
