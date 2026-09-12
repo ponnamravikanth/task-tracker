@@ -25,6 +25,21 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: task_tracker_app
+          POSTGRES_PASSWORD: ci_test_password
+          POSTGRES_DB: task_tracker_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Download source code
         uses: actions/checkout@v7
@@ -41,8 +56,48 @@ jobs:
       - name: Run automated tests
         run: npm test
 
+      - name: Run PostgreSQL integration tests
+        run: npm run test:postgres
+        env:
+          TEST_DATABASE_URL: postgresql://task_tracker_app:ci_test_password@127.0.0.1:5432/task_tracker_test
+
+      - name: Check server syntax
+        run: npm run check:server
+
+      - name: Validate production configuration
+        run: |
+          if [ -z "$VITE_API_BASE_URL" ]; then
+            echo "PRODUCTION_API_BASE_URL is not configured."
+            exit 1
+          fi
+
+          if [ -z "$VITE_AUTH0_DOMAIN" ]; then
+            echo "VITE_AUTH0_DOMAIN is not configured."
+            exit 1
+          fi
+
+          if [ -z "$VITE_AUTH0_CLIENT_ID" ]; then
+            echo "VITE_AUTH0_CLIENT_ID is not configured."
+            exit 1
+          fi
+
+          if [ -z "$VITE_AUTH0_AUDIENCE" ]; then
+            echo "VITE_AUTH0_AUDIENCE is not configured."
+            exit 1
+          fi
+        env:
+          VITE_API_BASE_URL: ${{ vars.PRODUCTION_API_BASE_URL }}
+          VITE_AUTH0_DOMAIN: ${{ vars.VITE_AUTH0_DOMAIN }}
+          VITE_AUTH0_CLIENT_ID: ${{ vars.VITE_AUTH0_CLIENT_ID }}
+          VITE_AUTH0_AUDIENCE: ${{ vars.VITE_AUTH0_AUDIENCE }}
+
       - name: Build production application
         run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ vars.PRODUCTION_API_BASE_URL }}
+          VITE_AUTH0_DOMAIN: ${{ vars.VITE_AUTH0_DOMAIN }}
+          VITE_AUTH0_CLIENT_ID: ${{ vars.VITE_AUTH0_CLIENT_ID }}
+          VITE_AUTH0_AUDIENCE: ${{ vars.VITE_AUTH0_AUDIENCE }}
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6

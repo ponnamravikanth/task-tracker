@@ -206,3 +206,56 @@ button:hover {
     flex-direction: column;
   }
 }
+.app-status {
+  min-height: 24px;
+  margin: 16px 0 0;
+  color: #637083;
+  font-size: 0.9rem;
+}
+
+.app-status-error {
+  color: #b42318;
+}
+
+button:disabled,
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.auth-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.auth-status {
+  flex: 1;
+  margin: 0;
+  color: #637083;
+  overflow-wrap: anywhere;
+}
+
+.auth-controls button {
+  flex: 0 0 auto;
+}
+
+.secondary-button {
+  color: #384152;
+  background: #e8ebf1;
+}
+
+.secondary-button:hover {
+  background: #d8dde7;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 520px) {
+  .auth-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Local SQLite data
+data/
+# Environment-specific configuration
+.env
+.env.*
+!.env.example

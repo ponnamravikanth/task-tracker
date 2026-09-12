@@ -2,16 +2,30 @@
   "name": "task-tracker",
   "version": "0.0.0",
   "private": true,
+  "engines": {
+    "node": ">=24 <25"
+  },
   "type": "module",
   "scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "preview": "vite preview",
-  "test": "vitest run",
-  "test:watch": "vitest"
-},
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run --exclude server/postgres-database.test.js",
+    "test:watch": "vitest --exclude server/postgres-database.test.js",
+    "test:postgres": "node --env-file-if-exists=.env.test.local node_modules/vitest/vitest.mjs run server/postgres-database.test.js",
+    "server": "node --env-file-if-exists=.env.local --watch server/server.js",
+    "start": "node --env-file-if-exists=.env.local server/server.js",
+    "check:server": "node --check server/server.js && node --check server/app.js && node --check server/auth.js && node --check server/database.js && node --check server/postgres-database.js && node --check server/postgres-database.test.js && node --check server/config.js"
+  },
   "devDependencies": {
     "vite": "^8.2.2",
     "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "@auth0/auth0-spa-js": "^2.24.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "express-oauth2-jwt-bearer": "^1.10.0",
+    "pg": "^8.23.0"
   }
 }
