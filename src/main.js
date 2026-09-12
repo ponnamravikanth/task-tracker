@@ -19,7 +19,7 @@ import {
 document.querySelector('#app').innerHTML = `
   <main class="app">
     <header class="app-header">
-      <p class="eyebrow">My first application</p>
+      <p class="eyebrow">Track and Manage Your Tasks Application </p>
       <h1>Task Tracker</h1>
       <p class="subtitle">
         Plan your day, one task at a time.
@@ -64,6 +64,7 @@ document.querySelector('#app').innerHTML = `
             type="text"
             placeholder="For example: Learn JavaScript"
             autocomplete="off"
+            maxlength="200"
           />
 
           <button type="submit">Add task</button>

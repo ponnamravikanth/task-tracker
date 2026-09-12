@@ -27,29 +27,29 @@ async function readErrorMessage(response) {
   return `Request failed with status ${response.status}.`
 }
 
-async function request(url, options = {}) {
-const accessToken = await getAccessToken()
-const headers = new Headers(options.headers)
-
-headers.set(
-  'Authorization',
-  `Bearer ${accessToken}`,
-)
-
-const response = await fetch(url, {
-  ...options,
-  headers,
-})
-
-  if (!response.ok) {
+async function request(url, options = {}) 
+{
+  const accessToken = await getAccessToken()
+  const headers = new Headers(options.headers)
+  headers.set('Authorization',`Bearer ${accessToken}`,)
+  let response
+  try 
+  {
+    response = await fetch(url, {...options,headers,})
+  } 
+  catch 
+  { 
+    throw new Error('Unable to reach the task service. Please try again.',)
+  }
+  if (!response.ok) 
+  {
     const message = await readErrorMessage(response)
     throw new Error(message)
   }
-
-  if (response.status === 204) {
+  if (response.status === 204) 
+  { 
     return null
   }
-
   return response.json()
 }
 
