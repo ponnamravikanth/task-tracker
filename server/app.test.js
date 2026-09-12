@@ -188,7 +188,7 @@ describe('task API', function () {
 
   it('returns 404 for a missing task', async function () {
     const response = await fetch(
-      `${baseUrl}/api/tasks/does-not-exist`,
+      `${baseUrl}/api/tasks/00000000-0000-0000-0000-000000000000`,
     )
 
     expect(response.status).toBe(404)
@@ -197,44 +197,35 @@ describe('task API', function () {
       error: 'Task not found.',
     })
   })
-  it('keeps tasks isolated by user', async function () {
-  const createResponse = await createTask(
-    'User A private task',
-  )
-
-  const userATask = await createResponse.json()
-
-  authenticatedUserId = 'google-oauth2|user-b'
-
-  const userBListResponse = await fetch(
-    `${baseUrl}/api/tasks`,
-  )
-
-  expect(await userBListResponse.json()).toEqual([])
-
-  const userBReadResponse = await fetch(
-    `${baseUrl}/api/tasks/${userATask.id}`,
-  )
-
-  expect(userBReadResponse.status).toBe(404)
-
-  const userBDeleteResponse = await fetch(
-    `${baseUrl}/api/tasks/${userATask.id}`,
+  it('rejects an invalid task ID', async function () 
+  {
+    const response = await fetch(`${baseUrl}/api/tasks/not-a-uuid`,)
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({error: 'Task ID is invalid.',})
+  })
+  it('rejects an excessively long title', async function () 
+  { 
+    const response = await createTask('a'.repeat(201),)
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({ error: 'Task title must be 200 characters or fewer.',})
+  })
+  it('keeps tasks isolated by user', async function () 
+  { 
+    const createResponse = await createTask('User A private task',)
+    const userATask = await createResponse.json()
+    authenticatedUserId = 'google-oauth2|user-b'
+    const userBListResponse = await fetch(`${baseUrl}/api/tasks`,)
+    expect(await userBListResponse.json()).toEqual([])
+    const userBReadResponse = await fetch(`${baseUrl}/api/tasks/${userATask.id}`,)
+    expect(userBReadResponse.status).toBe(404)
+    const userBDeleteResponse = await fetch(`${baseUrl}/api/tasks/${userATask.id}`,    
     {
       method: 'DELETE',
     },
-  )
-
-  expect(userBDeleteResponse.status).toBe(404)
-
-  authenticatedUserId = 'google-oauth2|user-a'
-
-  const userAListResponse = await fetch(
-    `${baseUrl}/api/tasks`,
-  )
-
-  expect(await userAListResponse.json()).toEqual([
-    userATask,
-  ])
-})
+    )
+    expect(userBDeleteResponse.status).toBe(404)
+    authenticatedUserId = 'google-oauth2|user-a'
+    const userAListResponse = await fetch(`${baseUrl}/api/tasks`,)
+    expect(await userAListResponse.json()).toEqual([userATask,])
+  })
 })

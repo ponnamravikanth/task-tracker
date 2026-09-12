@@ -1,4 +1,5 @@
-import {
+import 
+{
   createAuth0Client,
 } from '@auth0/auth0-spa-js'
 
@@ -8,68 +9,59 @@ const audience = import.meta.env.VITE_AUTH0_AUDIENCE
 
 let authClient
 
-function getApplicationUrl() {
+function getApplicationUrl() 
+{
   return new URL(
     import.meta.env.BASE_URL,
     window.location.origin,
   ).toString()
 }
 
-function validateConfiguration() {
+function validateConfiguration() 
+{
   const missingSettings = []
-
-  if (!domain) {
+  if (!domain) 
+  {
     missingSettings.push('VITE_AUTH0_DOMAIN')
   }
-
-  if (!clientId) {
+  if (!clientId) 
+  {
     missingSettings.push('VITE_AUTH0_CLIENT_ID')
   }
-
-  if (!audience) {
+  if (!audience) 
+  {
     missingSettings.push('VITE_AUTH0_AUDIENCE')
   }
-
-  if (missingSettings.length > 0) {
-    throw new Error(
-      `Missing authentication configuration: ` +
-        missingSettings.join(', '),
-    )
+  if (missingSettings.length > 0) 
+  {
+    throw new Error(`Missing authentication configuration: ` +missingSettings.join(', '),)
   }
 }
 
-export async function initializeAuthentication() {
+export async function initializeAuthentication() 
+{
   validateConfiguration()
-
   authClient = await createAuth0Client({
     domain,
     clientId,
 
-    authorizationParams: {
-      audience,
-      redirect_uri: getApplicationUrl(),
-    },
+    authorizationParams: {audience,redirect_uri: getApplicationUrl(),},
   })
 
-  const query = window.location.search
-
-  if (
-    query.includes('code=') &&
-    query.includes('state=')
-  ) {
-    await authClient.handleRedirectCallback()
-
-    window.history.replaceState(
-      {},
-      document.title,
-      getApplicationUrl(),
-    )
-  }
-
-  const authenticated =
-    await authClient.isAuthenticated()
-
-  const user = authenticated
+const queryParameters = new URLSearchParams(window.location.search,)
+if (queryParameters.has('error')) 
+{
+  const description = queryParameters.get('error_description') ||'Authentication failed.'
+  window.history.replaceState({},document.title,getApplicationUrl(),)
+  throw new Error(description)
+}
+if (queryParameters.has('code') && queryParameters.has('state')) 
+{
+  await authClient.handleRedirectCallback()
+  window.history.replaceState({},document.title,getApplicationUrl(),)
+}
+const authenticated = await authClient.isAuthenticated()
+const user = authenticated
     ? await authClient.getUser()
     : null
 
@@ -78,19 +70,14 @@ export async function initializeAuthentication() {
     user,
   }
 }
-
 export async function logIn() {
   await authClient.loginWithRedirect()
 }
-
-export function logOut() {
-  authClient.logout({
-    logoutParams: {
-      returnTo: getApplicationUrl(),
-    },
-  })
+export function logOut() 
+{
+  authClient.logout({ logoutParams: { returnTo: getApplicationUrl(), },})
 }
-
-export async function getAccessToken() {
+export async function getAccessToken() 
+{
   return authClient.getTokenSilently()
 }

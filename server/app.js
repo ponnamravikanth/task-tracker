@@ -1,5 +1,11 @@
 import cors from 'cors'
 import express from 'express'
+import helmet from 'helmet'
+
+const maximumTaskTitleLength = 200
+
+const taskIdPattern =
+  /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i
 
 function rejectUnauthenticatedRequest(
   request,
@@ -22,14 +28,24 @@ export function createApp(
   } = {},
 ) {
   const app = express()
-
+  app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: false,
+    strictTransportSecurity: false,
+  }),
+)
   app.use(
     cors({
       origin: allowedOrigin,
     }),
   )
 
-  app.use(express.json())
+  app.use(
+  express.json({
+    limit: '10kb',
+  }),
+)
 
   app.get('/api/health', function (request, response) {
     response.json({
@@ -48,6 +64,18 @@ export function createApp(
   )
 
   app.use('/api/tasks', authenticate)
+  app.param(
+  'taskId',
+  function (request, response, next, taskId) {
+    if (!taskIdPattern.test(taskId)) {
+      return response.status(400).json({
+        error: 'Task ID is invalid.',
+      })
+    }
+
+    return next()
+  },
+)
 
   app.get(
     '/api/tasks',
@@ -82,19 +110,30 @@ export function createApp(
     '/api/tasks',
     async function (request, response) {
       const title = request.body.title
+      const normalizedTitle =
+        typeof title === 'string'
+       ? title.trim()
+        : ''
+      if (normalizedTitle === '') {
+          return response.status(400).json({
+          error: 'Task title is required.',
+          })
+      }
 
       if (
-        typeof title !== 'string' ||
-        title.trim() === ''
-      ) {
-        return response.status(400).json({
-          error: 'Task title is required.',
-        })
-      }
+          normalizedTitle.length >
+          maximumTaskTitleLength
+        ) {
+            return response.status(400).json({
+            error:
+              `Task title must be ${maximumTaskTitleLength} ` +
+              `characters or fewer.`,
+            })
+          }
 
       const newTask = await taskRepository.createTask(
         getUserId(request),
-        title.trim(),
+        normalizedTitle,
       )
 
       return response.status(201).json(newTask)
@@ -154,29 +193,24 @@ export function createApp(
     })
   })
 
-  app.use(function (
-    error,
-    request,
-    response,
-    next,
-  ) {
+  app.use(function (error,request,response, next,) 
+  {
     console.error(error)
 
-    if (error.status === 401) {
-      return response.status(401).json({
-        error: 'Authentication required.',
-      })
+    if (error.status === 401) 
+    {
+      return response.status(401).json({error: 'Authentication required.',})
+    }
+    if (error.type === 'entity.too.large') 
+    {
+        return response.status(413).json({ error: 'Request body is too large.',})
+    }
+    if (error instanceof SyntaxError) 
+    {
+      return response.status(400).json({ error: 'Request body contains invalid JSON.',})
     }
 
-    if (error instanceof SyntaxError) {
-      return response.status(400).json({
-        error: 'Request body contains invalid JSON.',
-      })
-    }
-
-    return response.status(500).json({
-      error: 'An unexpected server error occurred.',
-    })
+    return response.status(500).json({error: 'An unexpected server error occurred.',})
   })
 
   return app
