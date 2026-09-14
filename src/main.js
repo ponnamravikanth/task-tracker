@@ -285,7 +285,7 @@ async function initializeApplication() {
 
     if (!authentication.authenticated) {
       authStatus.textContent =
-        'Log in to view your tasks.'
+        'Log in to add or view your tasks.'
 
       loginButton.hidden = false
       return
